@@ -60,7 +60,7 @@ public class InMemoryLoanRepository : ILoanRepository
         return _loans
             .Where(loan =>
                 loan.MemberId == memberId &&
-                !loan.IsReturned)
+                loan.IsActive)
             .ToList()
             .AsReadOnly();
     }

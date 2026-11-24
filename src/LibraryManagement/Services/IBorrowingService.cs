@@ -5,12 +5,9 @@ namespace LibraryManagement.Services;
 
 public interface IBorrowingService
 {
-    Loan BorrowBook(
-        Guid memberId,
-        Guid bookId,
-        DateOnly borrowingDate);
+    Loan BorrowBook( Guid memberId,Guid bookId,DateOnly borrowingDate);
 
-    Fine? ReturnBook(
-        Guid loanId,
-        DateOnly returnDate);
+    Fine? ReturnBook( Guid loanId,DateOnly returnDate);
+
+    Fine ReportLostBook(Guid loanId,DateOnly lostDate);
 }

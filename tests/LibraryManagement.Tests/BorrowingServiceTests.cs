@@ -1026,5 +1026,328 @@ public class BorrowingServiceTests
             exception.Message);
     }
 
+    [Fact]
+    public void ReportLostBook_ShouldGenerateReplacementCharge()
+    {
+        var bookRepository = new InMemoryBookRepository();
+        var bookCopyRepository = new InMemoryBookCopyRepository();
+        var memberRepository = new InMemoryMemberRepository();
+        var loanRepository = new InMemoryLoanRepository(bookCopyRepository);
+        var fineRepository = new InMemoryFineRepository();
+
+        var member = new Member(
+            "MEM017",
+            "Test Member",
+            MemberCategory.Standard);
+
+        memberRepository.Add(member);
+
+        var book = new Book(
+            "ISBN-LOST-001",
+            "Clean Code",
+            "Robert Martin",
+            "Publisher",
+            2020,
+            100.00m,
+            true);
+
+        bookRepository.Add(book);
+
+        var copy = new BookCopy(book.Id);
+        bookCopyRepository.Add(copy);
+        copy.MarkAsBorrowed();
+
+        var loan = new Loan(
+            member.Id,
+            copy.Id,
+            new DateOnly(2026, 11, 1),
+            14);
+
+        loanRepository.Add(loan);
+
+        var service = new BorrowingService(
+            bookRepository,
+            bookCopyRepository,
+            memberRepository,
+            loanRepository,
+            fineRepository,
+            new BorrowingPolicyFactory());
+
+        var lostDate = new DateOnly(2026, 11, 10);
+
+        var replacementFine = service.ReportLostBook(
+            loan.Id,
+            lostDate);
+
+        Assert.Equal(100.00m, replacementFine.Amount);
+        Assert.Equal(FineType.Replacement, replacementFine.Type);
+        Assert.True(loan.IsLost);
+        Assert.False(loan.IsActive);
+        Assert.Equal(BookCopyStatus.Lost, copy.Status);
+    }
+
+
+    [Fact]
+    public void ReportLostBook_ShouldGenerateOverdueAndReplacementCharges()
+    {
+        var bookRepository = new InMemoryBookRepository();
+        var bookCopyRepository = new InMemoryBookCopyRepository();
+        var memberRepository = new InMemoryMemberRepository();
+        var loanRepository = new InMemoryLoanRepository(bookCopyRepository);
+        var fineRepository = new InMemoryFineRepository();
+
+        var member = new Member(
+            "MEM018",
+            "Test Member",
+            MemberCategory.Standard);
+
+        memberRepository.Add(member);
+
+        var book = new Book(
+            "ISBN-LOST-002",
+            "C# Programming",
+            "Author",
+            "Publisher",
+            2022,
+            120.00m,
+            true);
+
+        bookRepository.Add(book);
+
+        var copy = new BookCopy(book.Id);
+        bookCopyRepository.Add(copy);
+        copy.MarkAsBorrowed();
+
+        var loan = new Loan(
+            member.Id,
+            copy.Id,
+            new DateOnly(2026, 11, 1),
+            14);
+
+        loanRepository.Add(loan);
+
+        var service = new BorrowingService(
+            bookRepository,
+            bookCopyRepository,
+            memberRepository,
+            loanRepository,
+            fineRepository,
+            new BorrowingPolicyFactory());
+
+        var lostDate = new DateOnly(2026, 11, 18);
+
+        service.ReportLostBook(loan.Id, lostDate);
+
+        var fines = fineRepository.GetByMemberId(member.Id).ToList();
+
+        Assert.Equal(2, fines.Count);
+
+        Assert.Contains(fines, fine =>
+            fine.Type == FineType.Overdue &&
+            fine.Amount == 6.00m);
+
+        Assert.Contains(fines, fine =>
+            fine.Type == FineType.Replacement &&
+            fine.Amount == 120.00m);
+    }
+
+
+    [Fact]
+    public void ReportLostBook_ShouldNotExceedMaximumOverdueFineCap()
+    {
+        var bookRepository = new InMemoryBookRepository();
+        var bookCopyRepository = new InMemoryBookCopyRepository();
+        var memberRepository = new InMemoryMemberRepository();
+        var loanRepository = new InMemoryLoanRepository(bookCopyRepository);
+        var fineRepository = new InMemoryFineRepository();
+
+        var member = new Member(
+            "MEM019",
+            "Test Member",
+            MemberCategory.Standard);
+
+        memberRepository.Add(member);
+
+        var book = new Book(
+            "ISBN-LOST-003",
+            "Advanced C#",
+            "Author",
+            "Publisher",
+            2022,
+            150.00m,
+            true);
+
+        bookRepository.Add(book);
+
+        var copy = new BookCopy(book.Id);
+        bookCopyRepository.Add(copy);
+        copy.MarkAsBorrowed();
+
+        var loan = new Loan(
+            member.Id,
+            copy.Id,
+            new DateOnly(2026, 10, 1),
+            14);
+
+        loanRepository.Add(loan);
+
+        var service = new BorrowingService(
+            bookRepository,
+            bookCopyRepository,
+            memberRepository,
+            loanRepository,
+            fineRepository,
+            new BorrowingPolicyFactory());
+
+        service.ReportLostBook(
+            loan.Id,
+            new DateOnly(2026, 11, 20));
+
+        var fines = fineRepository.GetByMemberId(member.Id).ToList();
+
+        var overdueFine = Assert.Single(
+            fines.Where(fine => fine.Type == FineType.Overdue));
+
+        Assert.Equal(50.00m, overdueFine.Amount);
+    }
+
+
+    [Fact]
+    public void ReportLostBook_ShouldRejectAlreadyReturnedLoan()
+    {
+        var bookRepository = new InMemoryBookRepository();
+        var bookCopyRepository = new InMemoryBookCopyRepository();
+        var memberRepository = new InMemoryMemberRepository();
+        var loanRepository = new InMemoryLoanRepository(bookCopyRepository);
+        var fineRepository = new InMemoryFineRepository();
+
+        var member = new Member(
+            "MEM020",
+            "Test Member",
+            MemberCategory.Standard);
+
+        memberRepository.Add(member);
+
+        var book = new Book(
+            "ISBN-LOST-004",
+            "Programming Basics",
+            "Author",
+            "Publisher",
+            2022,
+            80.00m,
+            true);
+
+        bookRepository.Add(book);
+
+        var copy = new BookCopy(book.Id);
+        bookCopyRepository.Add(copy);
+        copy.MarkAsBorrowed();
+
+        var loan = new Loan(
+            member.Id,
+            copy.Id,
+            new DateOnly(2026, 11, 1),
+            14);
+
+        loanRepository.Add(loan);
+
+        loan.ReturnBook(new DateOnly(2026, 11, 5));
+        copy.MarkAsAvailable();
+
+        var service = new BorrowingService(
+            bookRepository,
+            bookCopyRepository,
+            memberRepository,
+            loanRepository,
+            fineRepository,
+            new BorrowingPolicyFactory());
+
+        Assert.Throws<InvalidOperationException>(
+            () => service.ReportLostBook(
+                loan.Id,
+                new DateOnly(2026, 11, 10)));
+
+        Assert.Empty(fineRepository.GetByMemberId(member.Id));
+    }
+
+
+    [Fact]
+    public void ReportLostBook_ShouldRejectAlreadyLostLoan()
+    {
+        var bookRepository = new InMemoryBookRepository();
+        var bookCopyRepository = new InMemoryBookCopyRepository();
+        var memberRepository = new InMemoryMemberRepository();
+        var loanRepository = new InMemoryLoanRepository(bookCopyRepository);
+        var fineRepository = new InMemoryFineRepository();
+
+        var member = new Member(
+            "MEM021",
+            "Test Member",
+            MemberCategory.Standard);
+
+        memberRepository.Add(member);
+
+        var book = new Book(
+            "ISBN-LOST-005",
+            "Software Design",
+            "Author",
+            "Publisher",
+            2022,
+            90.00m,
+            true);
+
+        bookRepository.Add(book);
+
+        var copy = new BookCopy(book.Id);
+        bookCopyRepository.Add(copy);
+        copy.MarkAsBorrowed();
+
+        var loan = new Loan(
+            member.Id,
+            copy.Id,
+            new DateOnly(2026, 11, 1),
+            14);
+
+        loanRepository.Add(loan);
+
+        var service = new BorrowingService(
+            bookRepository,
+            bookCopyRepository,
+            memberRepository,
+            loanRepository,
+            fineRepository,
+            new BorrowingPolicyFactory());
+
+        service.ReportLostBook(
+            loan.Id,
+            new DateOnly(2026, 11, 10));
+
+        Assert.Throws<InvalidOperationException>(
+            () => service.ReportLostBook(
+                loan.Id,
+                new DateOnly(2026, 11, 11)));
+
+        Assert.Single(
+            fineRepository.GetByMemberId(member.Id));
+    }
+
+    [Fact]
+    public void ReturnBook_ShouldRejectLostLoan()
+    {
+        var loan = new Loan(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 11, 1),
+            14);
+
+        loan.MarkAsLost(new DateOnly(2026, 11, 10));
+
+        Assert.Throws<InvalidOperationException>(
+            () => loan.ReturnBook(
+                new DateOnly(2026, 11, 11)));
+
+        Assert.True(loan.IsLost);
+        Assert.False(loan.IsReturned);
+    }
 
 }

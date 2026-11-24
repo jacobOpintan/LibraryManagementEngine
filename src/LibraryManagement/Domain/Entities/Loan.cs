@@ -14,12 +14,15 @@ public class Loan
     public DateOnly DueDate { get; private set; }
 
     public DateOnly? ReturnDate { get; private set; }
+    public DateOnly? LostDate { get; private set; }
 
     public int RenewalCount { get; private set; }
 
     public DateOnly? LastRenewalDate { get; private set; }
 
     public bool IsReturned => ReturnDate.HasValue;
+    public bool IsLost => LostDate.HasValue;
+    public bool IsActive => !IsReturned && !IsLost;
 
     public Loan(
         Guid memberId,
@@ -57,6 +60,10 @@ public class Loan
             throw new InvalidOperationException(
                 "This book has already been returned.");
 
+        if (IsLost)
+            throw new InvalidOperationException(
+                "A lost loan cannot be returned.");
+
         if (returnDate < BorrowedDate)
             throw new ArgumentException(
                 "Return date cannot be before the borrowing date.",
@@ -69,6 +76,9 @@ public class Loan
     //implementing method  for renewal of loaned book 
     public void Renew(DateOnly renewalDate, int loanPeriodInDays, int maximumRenewals)
     {
+        if (IsLost)
+            throw new InvalidOperationException(
+                "A lost loan cannot be renewed.");
         if (IsReturned)
             throw new InvalidOperationException(
                 "A returned loan cannot be renewed.");
@@ -101,5 +111,22 @@ public class Loan
         LastRenewalDate = renewalDate;
     }
 
+    public void MarkAsLost(DateOnly lostDate)
+    {
+        if (IsReturned)
+            throw new InvalidOperationException(
+                "A returned loan cannot be marked as lost.");
+
+        if (IsLost)
+            throw new InvalidOperationException(
+                "This loan has already been marked as lost.");
+
+        if (lostDate < BorrowedDate)
+            throw new ArgumentException(
+                "Lost date cannot be before the borrowing date.",
+                nameof(lostDate));
+
+        LostDate = lostDate;
+    }
 
 }
