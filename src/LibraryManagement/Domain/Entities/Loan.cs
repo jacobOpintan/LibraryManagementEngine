@@ -78,9 +78,9 @@ public class Loan
                 "Renewal date cannot be before the borrowing date.",
                 nameof(renewalDate));
 
-        if (renewalDate > DueDate)
+       if (renewalDate >= DueDate)
             throw new InvalidOperationException(
-                "An overdue loan cannot be renewed.");
+                "A loan must be renewed before its due date.");
 
         if (loanPeriodInDays <= 0)
             throw new ArgumentOutOfRangeException(
