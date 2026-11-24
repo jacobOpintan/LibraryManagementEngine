@@ -42,18 +42,19 @@ public class BorrowingServiceTests
 
         memberRepository.Add(member);
 
-        var borrowingService = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+        var service = new BorrowingService(
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         var borrowingDate = new DateOnly(2026, 11, 24);
 
         // Act
-        var loan = borrowingService.BorrowBook(
+        var loan = service.BorrowBook(
             member.Id,
             book.Id,
             borrowingDate);
@@ -109,12 +110,13 @@ public class BorrowingServiceTests
         memberRepository.Add(member);
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         // Act and Assert
         Assert.Throws<InvalidOperationException>(() =>
@@ -157,12 +159,13 @@ public class BorrowingServiceTests
         memberRepository.Add(member);
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         // Act and Assert
         Assert.Throws<InvalidOperationException>(() =>
@@ -206,12 +209,13 @@ public class BorrowingServiceTests
         memberRepository.Add(member);
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         // Act and Assert
         Assert.Throws<InvalidOperationException>(() =>
@@ -280,12 +284,13 @@ public class BorrowingServiceTests
         bookCopyRepository.Add(new BookCopy(additionalBook.Id));
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         // Act and Assert
         Assert.Throws<InvalidOperationException>(() =>
@@ -341,12 +346,13 @@ public class BorrowingServiceTests
         loanRepository.Add(existingLoan);
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         // Act and Assert
         Assert.Throws<InvalidOperationException>(() =>
@@ -414,12 +420,13 @@ public class BorrowingServiceTests
         bookCopyRepository.Add(newCopy);
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         // Act and Assert
         Assert.Throws<InvalidOperationException>(() =>
@@ -472,12 +479,13 @@ public class BorrowingServiceTests
         bookCopyRepository.Add(copy);
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         // Act and Assert
         Assert.Throws<InvalidOperationException>(() =>
@@ -532,12 +540,13 @@ public class BorrowingServiceTests
         copy.MarkAsBorrowed();
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         var returnDate = new DateOnly(2026, 11, 10);
 
@@ -599,12 +608,13 @@ public class BorrowingServiceTests
         copy.MarkAsBorrowed();
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         // Due date: 15 November 2026.
         // Return date: 18 November 2026.
@@ -672,12 +682,13 @@ public class BorrowingServiceTests
         copy.MarkAsBorrowed();
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         // Due date: 15 November 2026.
         // Return date: 20 February 2027.
@@ -738,14 +749,14 @@ public class BorrowingServiceTests
         loan.ReturnBook(new DateOnly(2026, 11, 10));
         copy.MarkAsAvailable();
 
-        var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
-
+       var service = new BorrowingService(
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
         // Act and Assert
         Assert.Throws<InvalidOperationException>(() =>
             service.ReturnBook(
@@ -798,12 +809,13 @@ public class BorrowingServiceTests
         loanRepository.Add(loan);
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         // Act and Assert
         Assert.Throws<ArgumentException>(() =>
@@ -850,12 +862,13 @@ public class BorrowingServiceTests
         bookCopyRepository.Add(copy);
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         var borrowingDate = new DateOnly(2026, 11, 24);
 
@@ -917,13 +930,14 @@ public class BorrowingServiceTests
         loanRepository.Add(loan);
         copy.MarkAsBorrowed();
 
-        var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+       var service = new BorrowingService(
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         // Due date: 22 November 2026.
         // Return date: 25 November 2026.
@@ -1007,12 +1021,13 @@ public class BorrowingServiceTests
         }
 
         var service = new BorrowingService(
-            bookRepository,
-            bookCopyRepository,
-            memberRepository,
-            loanRepository,
-            fineRepository,
-            policyFactory);
+    bookRepository,
+    bookCopyRepository,
+    memberRepository,
+    loanRepository,
+    fineRepository,
+    new InMemoryReservationRepository(),
+    policyFactory);
 
         // Attempt to borrow the sixth book.
         var exception = Assert.Throws<InvalidOperationException>(
@@ -1071,6 +1086,7 @@ public class BorrowingServiceTests
             memberRepository,
             loanRepository,
             fineRepository,
+            new InMemoryReservationRepository(),
             new BorrowingPolicyFactory());
 
         var lostDate = new DateOnly(2026, 11, 10);
@@ -1132,6 +1148,7 @@ public class BorrowingServiceTests
             memberRepository,
             loanRepository,
             fineRepository,
+            new InMemoryReservationRepository(),
             new BorrowingPolicyFactory());
 
         var lostDate = new DateOnly(2026, 11, 18);
@@ -1197,6 +1214,7 @@ public class BorrowingServiceTests
             memberRepository,
             loanRepository,
             fineRepository,
+            new InMemoryReservationRepository(),
             new BorrowingPolicyFactory());
 
         service.ReportLostBook(
@@ -1260,6 +1278,7 @@ public class BorrowingServiceTests
             memberRepository,
             loanRepository,
             fineRepository,
+            new InMemoryReservationRepository(),
             new BorrowingPolicyFactory());
 
         Assert.Throws<InvalidOperationException>(
@@ -1316,6 +1335,7 @@ public class BorrowingServiceTests
             memberRepository,
             loanRepository,
             fineRepository,
+            new InMemoryReservationRepository(),
             new BorrowingPolicyFactory());
 
         service.ReportLostBook(

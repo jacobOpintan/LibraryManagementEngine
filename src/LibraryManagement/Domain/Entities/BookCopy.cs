@@ -63,4 +63,22 @@ public class BookCopy
         Status = BookCopyStatus.Damaged;
     }
 
+    public void MarkAsReserved()
+    {
+        if (Status != BookCopyStatus.Borrowed)
+            throw new InvalidOperationException(
+                "Only borrowed copies can be reserved.");
+
+        Status = BookCopyStatus.Reserved;
+    }
+
+    public void MarkAsAvailableFromReservation()
+    {
+        if (Status != BookCopyStatus.Reserved)
+            throw new InvalidOperationException(
+                "Only reserved copies can become available.");
+
+        Status = BookCopyStatus.Available;
+    }
+
 }

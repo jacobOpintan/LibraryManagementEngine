@@ -14,6 +14,7 @@ public class BorrowingService : IBorrowingService
     private readonly ILoanRepository _loanRepository;
     private readonly IFineRepository _fineRepository;
     private readonly BorrowingPolicyFactory _policyFactory;
+    private readonly IReservationRepository _reservationRepository;
 
     public BorrowingService(
         IBookRepository bookRepository,
@@ -21,6 +22,7 @@ public class BorrowingService : IBorrowingService
         IMemberRepository memberRepository,
         ILoanRepository loanRepository,
         IFineRepository fineRepository,
+        IReservationRepository reservationRepository,
         BorrowingPolicyFactory policyFactory)
     {
         _bookRepository = bookRepository
@@ -40,6 +42,9 @@ public class BorrowingService : IBorrowingService
 
         _policyFactory = policyFactory
             ?? throw new ArgumentNullException(nameof(policyFactory));
+
+        _reservationRepository = reservationRepository
+            ?? throw new ArgumentNullException(nameof(reservationRepository));
     }
 
     
@@ -192,7 +197,20 @@ public class BorrowingService : IBorrowingService
         loan.ReturnBook(returnDate);
 
         // Make the physical copy available again.
+       var reservationQueue = _reservationRepository
+    .GetActiveReservationsByBookId(bookCopy.BookId);
+
+    var nextReservation = reservationQueue.FirstOrDefault();
+
+    if (nextReservation is not null)
+    {
+        nextReservation.Fulfill();
         bookCopy.MarkAsAvailable();
+    }
+    else
+    {
+        bookCopy.MarkAsAvailable();
+    }
 
         // Save the fine if one was generated.
         if (fine is not null)
